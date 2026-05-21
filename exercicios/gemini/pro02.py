@@ -36,4 +36,123 @@ df_clientes.merge(right=df_transacoes, how='left', on=['IdCliente'])
 filtro = df_produtos['DescDescricaoProduto'].str.contains('mágico|mágica', case=False, na=False)
 df_produtos_filtrados = df_produtos[filtro]
 df_produtos_filtrados
+
+
+
 # %%
+# 4. Ticket Médio por Transação
+# Usando o df_transacao_produto, agrupe os dados por IdTransacao e calcule o valor total de cada compra (Ticket Médio).
+#  Em seguida, descubra qual é a média geral de todas as transações da loja.
+df_transacao_produto['ValorTotalItem'] = df_transacao_produto['QtdeProduto'] * df_transacao_produto['vlProduto']
+soma_transacao = df_transacao_produto.groupby('IdTransacao')['ValorTotalItem'].sum()
+media_transacao = soma_transacao.mean()
+media_transacao
+
+
+
+# %%
+# 5. Resumo do Carrinho (Agregações Múltiplas)
+# Ainda com foco no carrinho (IdTransacao), descubra para cada transação: o valor financeiro total e a
+# quantidade de produtos distintos comprados nela.
+df_transacao_produto.groupby('IdTransacao').agg({'ValorTotalItem' : 'sum',
+                                                 'IdProduto': 'count'})
+
+
+
+
+# %%
+# 6. Tabela Dinâmica (Pivot Table) de Vendas
+# Crie uma visão matricial onde as linhas sejam as categorias dos produtos (DescCategoriaProduto), 
+# as colunas sejam os sistemas de origem (DescSistemaOrigem), e os valores no meio da tabela sejam a soma 
+# do ValorTotalItem.
+df_master = df_produtos.merge(right=df_transacao_produto, how='inner', on='IdProduto')
+df_master = df_master.merge(right=df_transacoes, how='inner', on='IdTransacao')
+tabela_dinamica = pd.pivot_table(
+    data=df_master,
+    index='DescCategoriaProduto',
+    columns='DescSistemaOrigem',
+    values='ValorTotalItem',
+    aggfunc='sum',
+    fill_value=0
+)
+tabela_dinamica
+
+
+
+# %%
+# 7. Sazonalidade de Vendas (Dias da Semana)
+# Descubra qual dia da semana (segunda-feira, terça-feira, etc.) possui o maior volume histórico de 
+# transações com base na DtCriacao do df_transacoes.
+df_transacoes['DtCriacao'] = pd.to_datetime(df_transacoes['DtCriacao'])
+df_transacoes['Dia_Nome'] = df_transacoes['DtCriacao'].dt.day_name()
+volume_por_dia = df_transacoes.groupby('Dia_Nome')['IdTransacao'].count()
+volume_por_dia.sort_values(ascending=False)
+
+
+
+# %%
+# 8. Segmentação por Quantis (Bronze, Prata, Ouro)
+# Crie uma nova coluna no df_clientes chamada Categoria_Fidelidade. Baseado na coluna qtdePontos, divida seus clientes 
+# em 3 grupos ("Bronze", "Prata", "Ouro") de forma que a distribuição tente deixar um número parecido de clientes em cada grupo.
+df_total_pontos = df_clientes.groupby('IdCliente')['qtdePontos'].sum()
+df_total_pontos = df_total_pontos.sort_values(ascending=False)
+df_clientes['Categoria_Fidelidade'] = pd.qcut(
+    df_clientes['qtdePontos'], 
+    q=3, 
+    labels=['Bronze', 'Prata', 'Ouro']
+)
+df_clientes
+
+
+
+# %%
+# 9. Transação Mais Cara de Cada Cliente (Rankings)
+# Descubra qual foi a transação de maior valor financeiro para cada um dos clientes.
+valor_por_transacao = df_transacao_produto.groupby('IdTransacao')['ValorTotalItem'].sum().reset_index()
+df_com_valor = df_transacoes.merge(valor_por_transacao, on='IdTransacao', how='inner')
+df_ordenado = df_com_valor.sort_values(by='ValorTotalItem', ascending=False)
+maior_transacao_por_cliente = df_ordenado.drop_duplicates(subset='IdCliente', keep='first')
+maior_transacao_por_cliente
+
+
+
+# %%
+# 10. Precificação Relativa (Abaixo ou Acima da Média)
+# Descubra qual é o preço médio global de todos os produtos na loja. Depois, crie uma coluna no df_produtos
+#  chamada Faixa_Preco que receba o texto "Acima da Média" se o valor do produto for maior que a média global,
+#  e "Abaixo da Média" caso contrário.
+import numpy as np
+preco_medio_global = df_master['vlProduto'].mean()
+df_master['Faixa_Preco'] = np.where(df_master['vlProduto'] > preco_medio_global,
+                                      'Acima da Media',
+                                      'Abaixo da Media')
+df_master
+
+
+
+
+# %%
+# 11. Crescimento da Base de Clientes (Análise de Safra/Cohort)
+# Agrupe os clientes pelo Ano e Mês de sua DtCriacao e conte quantos clientes novos se cadastraram na loja em
+#  cada mês histórico.
+df_clientes['DtCriacao'] = pd.to_datetime(df_clientes['DtCriacao'])
+df_clientes['Ano/Mes'] = df_clientes['DtCriacao'].dt.to_period('M')
+df_clientes.groupby('Ano/Mes')['IdCliente'].count()
+
+
+
+# %%
+# 12. Clientes Fiéis (Múltiplas Compras)
+# Filtre o DataFrame para encontrar apenas os clientes que realizaram mais de 3 transações distintas na 
+# loja ao longo da história.
+contagem = df_transacoes.groupby('IdCliente')['IdTransacao'].count()
+clientes_fieis = contagem[contagem > 3].index  
+df_fieis = df_transacoes[df_transacoes['IdCliente'].isin(clientes_fieis)]
+df_fieis
+
+
+
+# %%
+# 13. Market Share das Categorias (% do Total)
+# Descubra qual porcentagem (%) da receita total da loja cada categoria de produto (DescCategoriaProduto) 
+# representa.
