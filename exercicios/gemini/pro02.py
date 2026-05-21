@@ -156,3 +156,34 @@ df_fieis
 # 13. Market Share das Categorias (% do Total)
 # Descubra qual porcentagem (%) da receita total da loja cada categoria de produto (DescCategoriaProduto) 
 # representa.
+df_pro_tra = df_produtos.merge(right=df_transacao_produto, how='inner', on=['IdProduto'])
+df_pro_tra['soma'] = df_pro_tra['QtdeProduto'] * df_pro_tra['vlProduto']
+total_por_cat = df_pro_tra.groupby('DescCategoriaProduto')['soma'].sum()
+total_loja = total_por_cat.sum()
+market_share = (total_por_cat / total_loja) * 100
+market_share
+
+
+
+# %%
+# 14. Deslocamento de Tempo (Frequência de Compra)
+# Escolha um cliente específico que tenha feito várias compras. Ordene as compras dele cronologicamente
+# e calcule a diferença de dias entre a 2ª compra e a 1ª, a 3ª e a 2ª, etc.
+df_cliente_especifico = df_transacoes[df_transacoes['IdCliente'] == '24782f0b-4683-4f35-976a-ea21d6714ba6'].copy()
+df_cliente_especifico['DtCriacao'] = pd.to_datetime(df_cliente_especifico['DtCriacao'])
+df_cliente_especifico = df_cliente_especifico.sort_values(by='DtCriacao')
+df_cliente_especifico['Data_Compra_Anterior'] = df_cliente_especifico['DtCriacao'].shift(1)
+df_cliente_especifico['Dias_Entre_Compras'] = (df_cliente_especifico['DtCriacao'] - df_cliente_especifico['Data_Compra_Anterior']).dt.days
+df_cliente_especifico[['IdCliente', 'IdTransacao', 'DtCriacao', 'Data_Compra_Anterior', 'Dias_Entre_Compras']]
+
+
+
+# %%
+# 15. Receita Acumulada no Tempo (Soma Cumulativa)
+# Ordene o seu "Master DataFrame" pela data da transação de forma cronológica 
+# (do mais antigo ao mais novo). Crie uma coluna mostrando o crescimento do faturamento acumulado 
+# dia a dia.
+df_master = df_master.sort_values(by='DtCriacao')
+df_master['total_acumulado'] = df_master['ValorTotalItem'].cumsum()
+df_master
+# %%
