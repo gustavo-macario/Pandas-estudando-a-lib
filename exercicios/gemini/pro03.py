@@ -158,4 +158,52 @@ df_campea['Ano_Mes'] = df_campea['DtCriacao'].dt.to_period('M')
 resultado = df_campea.groupby('Ano_Mes')['QtdeProduto'].sum().sort_values(ascending=False)
 resultado.head(1)
 
+
+
 # %%
+# 12. Receita Acumulada por Origem: Faça a soma cumulativa da receita da loja ao longo do tempo, mas crie
+#  linhas separadas para acompanhar o crescimento do faturamento do Sistema A, Sistema B, etc.
+df_12 = df_transacao_produto.merge(right=df_transacoes, how='inner', on='IdTransacao')
+df_12['total'] = df_12['QtdeProduto'] * df_12['vlProduto']
+df_12 = df_12.sort_values(by='DtCriacao').copy()
+df_12['acumulado'] = df_12.groupby('DescSistemaOrigem')['total'].cumsum()
+df_12
+
+
+
+# %%
+# 13. Top 3 Histórico: Quais são os 3 produtos específicos (Id e Nome) que mais geraram receita absoluta na
+# história da loja?
+df_13 = df_transacao_produto.merge(right=df_produtos, how='inner', on='IdProduto')
+df_13['total'] = df_13['QtdeProduto'] * df_13['vlProduto']
+faturamento_por_produto = df_13.groupby(['IdProduto', 'DescNomeProduto'])['total'].sum()
+faturamento_por_produto = faturamento_por_produto.sort_values(ascending=False).head(3)
+faturamento_por_produto
+
+
+
+# %%
+# 14. Filtro de "Baleias": Crie um DataFrame (df_baleias) contendo todas as linhas do master 
+# correspondentes apenas às transações (carrinhos) que ultrapassaram o valor total de R$ 1.000,00.
+df_master = df_transacao_produto.merge(right=df_produtos, how='inner', on='IdProduto')
+df_master = df_master.merge(right=df_transacoes, how='inner', on='IdTransacao')
+df_master = df_master.merge(right=df_clientes, how='inner', on='IdCliente')
+df_master['total'] = df_master['QtdeProduto'] * df_master['vlProduto']
+df_master['total_carrinho'] = df_master.groupby('IdTransacao')['total'].transform('sum')
+df_baleias = df_master[df_master['total_carrinho'] > 1000]
+df_baleias
+
+
+
+# %%
+# 15. A Primeira Escolha: Qual é a categoria de produto mais comum que aparece na primeira 
+# transação da vida de um cliente? (Dica: Ordene por data, use drop_duplicates mantendo a 
+# primeira compra, e depois conte as categorias).
+df_15= df_transacao_produto.merge(right=df_transacoes, how='inner', on='IdTransacao')
+df_15= df_15.merge(right=df_produtos, how='inner', on='IdProduto')
+df_15 = df_15.sort_values(by='DtCriacao')
+df_15 = df_15.drop_duplicates(subset='IdCliente', keep='first').copy()
+resultado = df_15['DescCategoriaProduto'].value_counts().head(1)
+resultado
+# %%
+    
