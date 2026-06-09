@@ -124,3 +124,31 @@ dia_campeao
 # %%
 # 9 Calcule o tempo médio, em dias, que os clientes demoram entre a sua primeira e a sua segunda transação 
 # na loja. (Desconsidere da média os clientes que só possuem uma única compra).
+df_9 = df_transacoes.copy()
+df_9['DtCriacao'] = pd.to_datetime(df_9['DtCriacao'])
+df_9 = df_9.sort_values(by='DtCriacao')
+df_9['numero_compra'] = df_9.groupby('IdCliente').cumcount()
+df_compra_0 = df_9[df_9['numero_compra'] == 0]
+df_compra_1 = df_9[df_9['numero_compra'] == 1]
+df_media = df_compra_0.merge(right=df_compra_1, how='inner', on='IdCliente')
+df_media['tempo_espera'] = df_media['DtCriacao_y'] - df_media['DtCriacao_x']
+tempo_medio_dias = df_media['tempo_espera'].mean().days
+print(f"Os clientes demoram, em média, {tempo_medio_dias} dias entre a 1ª e a 2ª compra.")
+
+
+
+# %%
+# 10 Quantos clientes atendem a todas as seguintes condições simultaneamente:
+# Tiveram a conta criada no ano de 2024.
+# Possuem 2 ou mais redes sociais diferentes vinculadas.
+# Nunca gastaram nenhum centavo na loja (receita total nula/zero).
+df_10 = df_clientes.copy()
+df_10['DtCriacao'] = pd.to_datetime(df_10['DtCriacao'])
+df_10 = df_10[df_10['DtCriacao'].dt.year == 2024]
+df_10['total_redes'] = df_10['flTwitch'] + df_10['flYouTube'] + df_10['flBlueSky'] + df_10['flInstagram']
+df_10 = df_10[df_10['total_redes'] >= 2]
+clientes_compradores = df_transacoes['IdCliente'].unique()
+df_10 = df_10[~df_10['IdCliente'].isin(clientes_compradores)]
+quantidade_final = df_10.shape[0]
+print(f"Quantidade de clientes que atendem a todas as condições: {quantidade_final}")
+# %%
