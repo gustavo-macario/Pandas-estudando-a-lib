@@ -121,4 +121,81 @@ df_final = df_primeira_compra[df_primeira_compra['dia_semana'] >= 5]
 quantidade_clientes = df_final.shape[0]
 
 print(f"Total de clientes que atenderam às condições: {quantidade_clientes}")
+
+
+# %%
+# 9 Crie uma tabela que liste TODOS os clientes da base e o total financeiro que eles já gastaram na loja. Para os 
+# clientes que nunca gastaram nada, a coluna de total gasto deve mostrar 0.0 (em vez de NaN). Ordene a tabela do cliente 
+# que mais gastou para o que menos gastou.
+df_9 = df_clientes.copy()
+df_9 = df_9.merge(right=df_transacoes, how='left', on='IdCliente')
+df_9 = df_9.merge(right=df_transacao_produto, how='left', on='IdTransacao')
+df_9['total_gasto'] = df_9['QtdeProduto'] * df_9['vlProduto']
+total = df_9.groupby('IdCliente')['total_gasto'].sum()
+total = total.sort_values(ascending=False)
+total = total.fillna(0)
+total
+
+
+
+# %%
+# 10 Encontre o IdCliente do usuário "Mestre da Loja". Ele atende a estas três condições simultaneamente:
+# Possui mais de 100 dias de "tempo de vida" na loja (diferença entre a data da sua primeira transação e da sua última 
+# transação).     
+# Já comprou produtos de pelo menos 3 categorias (DescCategoriaProduto) diferentes.
+# O valor da sua última compra foi maior que o valor da sua primeira compra.
+df_10 = df_clientes.copy()
+
+df_10 = df_10.merge(df_transacoes, on='IdCliente')
+df_10 = df_10.merge(df_transacao_produto, on='IdTransacao')
+df_10 = df_10.merge(df_produtos, on='IdProduto')
+
+df_10['DtCriacao_y'] = pd.to_datetime(df_10['DtCriacao_y'])
+
+df_10['total_linha'] = df_10['QtdeProduto'] * df_10['vlProduto']
+
+valor_transacao = (
+    df_10.groupby(['IdCliente', 'IdTransacao', 'DtCriacao_y'], as_index=False)
+         .agg(valor_compra=('total_linha', 'sum'))
+)
+
+valor_transacao = valor_transacao.sort_values(
+    ['IdCliente', 'DtCriacao_y']
+)
+
+resumo = valor_transacao.groupby('IdCliente').agg(
+    primeira_data=('DtCriacao_y', 'first'),
+    ultima_data=('DtCriacao_y', 'last'),
+    valor_primeira_compra=('valor_compra', 'first'),
+    valor_ultima_compra=('valor_compra', 'last')
+)
+
+categorias = (
+    df_10.groupby('IdCliente')['DescCategoriaProduto']
+         .nunique()
+         .rename('categorias_distintas')
+)
+
+resumo = resumo.join(categorias)
+
+condicao_1 = (
+    (resumo['ultima_data'] - resumo['primeira_data']).dt.days > 100
+)
+
+condicao_2 = (
+    resumo['categorias_distintas'] >= 3
+)
+
+condicao_3 = (
+    resumo['valor_ultima_compra'] >
+    resumo['valor_primeira_compra']
+)
+
+mestre_da_loja = resumo[
+    condicao_1 &
+    condicao_2 &
+    condicao_3
+]
+
+mestre_da_loja.index
 # %%
