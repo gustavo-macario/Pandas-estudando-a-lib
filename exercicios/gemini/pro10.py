@@ -132,4 +132,31 @@ porcentagem_acumulada = soma_cumulativa / faturamento_total_loja
 elite = porcentagem_acumulada[porcentagem_acumulada <= 0.50]
 elite
 
+
+# %%
+# 10 Encontre a lista de clientes (apenas os IDs) que atendem simultaneamente a estas regras:
+# Possuem o nível "VIP" (criado na Questão 2).
+# Já compraram pelo menos um item da categoria "espada" E pelo menos um item da categoria "armadura" na mesma vida útil da conta.
+# A sua última transação cronológica foi feita pelo sistema de origem "twitch".
+df_10 = df_clientes.copy()
+df_10 = df_10.merge(right=df_transacoes, how='inner', on='IdCliente')
+df_10 = df_10.merge(right=df_transacao_produto, how='inner', on='IdTransacao')
+df_10 = df_10.merge(right=df_produtos, how='inner', on='IdProduto')
+
+df_10['DtCriacao_y'] = pd.to_datetime(df_10['DtCriacao_y'])
+df_10 = df_10.sort_values(by='DtCriacao_y')
+
+df_10['NivelEngajamento'] = df_10['qtdePontos'].apply(nivel)
+df_10 = df_10[df_10['NivelEngajamento'] == 'VIP']
+
+resumo_perfil = df_10.groupby('IdCliente').agg(
+    ultimo_canal=('DescSistemaOrigem', 'last'),
+    todas_categorias=('DescCategoriaProduto', lambda x: ' '.join(x.unique()))
+)
+
+resumo_perfil = resumo_perfil[resumo_perfil['ultimo_canal'] == 'twitch']
+condicao_espada = resumo_perfil['todas_categorias'].str.contains('espada', case=False, na=False)
+condicao_armadura = resumo_perfil['todas_categorias'].str.contains('armadura', case=False, na=False)
+mestre_final = resumo_perfil[condicao_espada & condicao_armadura]
+print(mestre_final.index)
 # %%
