@@ -296,3 +296,58 @@ while caixa_atual <= 10000:
         break
 
 # %%
+# 15 Uma empresa quer comprar lotes de peças. Percorra as linhas do DataFrame com .iterrows().
+# Se a peça for 'Memória RAM' ou 'Armazenamento' e tiver 15 ou mais em estoque, calcule quanto custaria comprar exatamente
+# 10 unidades com 15% de desconto.
+# Guarde o nome da peça e esse custo com desconto em um novo dicionário de "Vendas Fechadas".
+df_15 = df_estoque_hardware.copy()
+df_15 = df_15[df_15['estoque'] > 0]
+
+valor_calculado = 0
+vendas_fechadas = {}
+for i, p in df_15.iterrows():
+     
+     if ('Memória RAM' in p['categoria'] or 'Armazenamento' in p['categoria']) and p['estoque'] >= 15:
+          valor_calculado = ((p['preco'] * 0.85) * 10)
+          vendas_fechadas[p['modelo']] = valor_calculado
+
+vendas_fechadas
+          
+     
+     
+# %%
+# 16 Crie um laço que percorra todas as linhas do estoque.
+# Se a peça for "Premium" (Score maior que 85), aplique um aumento de 10% no preço dela.
+# Se a peça for de "Entrada" (Score menor que 50), aplique um desconto de 5% para ajudar a desovar o estoque.
+# Peças intermediárias não mudam de preço.
+# Atualize os preços no DataFrame original.
+novo_preco = 0
+
+for i, p in df_estoque_hardware.iterrows():
+     if p['score_desempenho'] > 85:
+          novo_preco = p['preco'] * 1.10
+          df_estoque_hardware.loc[i, 'preco'] = novo_preco
+
+     elif p['score_desempenho'] < 50:
+          novo_preco = p['preco'] * 0.95
+          df_estoque_hardware.loc[i, 'preco'] = novo_preco
+
+df_estoque_hardware
+
+
+# %%
+# 17 Escreva uma lógica que varra a tabela e crie uma "Lista de Compras" automática. As regras para adicionar um item na lista são:
+# O estoque atual é zero.
+# OU o estoque é menor que 5, mas o score_desempenho é maior que 80 (peças premium que vendem bem).
+# Imprima apenas os modelos que caírem nessa malha fina.
+lista_compras = []
+for i, p in df_estoque_hardware.iterrows():
+     if p['estoque'] == 0 or (p['estoque'] < 5 and p['score_desempenho'] > 80):
+          lista_compras.append(p['modelo'])
+print(lista_compras)
+
+
+# %%
+# 18 Existe alguma peça com o preço completamente desproporcional à sua categoria?
+# Para cada categoria, descubra a média de preço. Depois, percorra os itens dessa categoria: se o preço do item for mais do que o
+#  dobro da média da sua própria categoria, imprima um "ALERTA DE PREÇO" com o nome do modelo.
