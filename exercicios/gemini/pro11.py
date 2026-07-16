@@ -351,3 +351,44 @@ print(lista_compras)
 # 18 Existe alguma peça com o preço completamente desproporcional à sua categoria?
 # Para cada categoria, descubra a média de preço. Depois, percorra os itens dessa categoria: se o preço do item for mais do que o
 #  dobro da média da sua própria categoria, imprima um "ALERTA DE PREÇO" com o nome do modelo.
+df_18 = df_estoque_hardware.copy()
+qtde_categoria = df_18.groupby('categoria')['modelo'].count()
+medias = df_18.groupby('categoria')['preco'].mean()
+
+for i, p in df_18.iterrows():
+     media_da_categoria = medias[p['categoria']]
+     if (p['preco'] > (media_da_categoria * 2)):
+          print('ALERTA DE PREÇO', p['modelo'])
+
+
+
+# %%
+# 19 Você precisa montar um mini-servidor que exige muita memória. Você tem R$ 2.000 de orçamento apenas para Memória RAM.
+# Escreva uma lógica para comprar a maior quantidade possível do modelo "16GB DDR4 3200MHz". Se o estoque dela acabar e ainda 
+# sobrar dinheiro, use o troco para comprar o modelo "8GB DDR4 2666MHz". Imprima quantas unidades de cada você conseguiu comprar.
+df_19 = df_estoque_hardware.copy()
+memorias = df_19[df_19['categoria'] == 'Memória RAM']
+
+orcamento = 2000
+qtde_16gb = 0
+memoria_16 = df_19[df_19['modelo'] == '16GB DDR4 3200MHz'].iloc[0]
+preco_16 = memoria_16['preco']
+estoque_16 = memoria_16['estoque']
+
+qtde_8 = 0
+memoria_8 = df_19[df_19['modelo'] == '8GB DDR4 2666MHz'].iloc[0]
+preco_8 = memoria_8['preco']
+estoque_8 = memoria_8['estoque']
+
+while orcamento >= preco_16 and estoque_16 > 0:
+     qtde_16gb += 1
+     orcamento -= preco_16
+     estoque_16 -= 1
+     
+while orcamento >= preco_8 and estoque_8 > 0:
+       qtde_8 += 1
+       orcamento -= preco_8
+       estoque_8 -= 1
+
+print(f"Compradas 16GB: {qtde_16gb} | Compradas 8GB: {qtde_8} | Sobrou: R$ {orcamento:.2f}")
+# %%
