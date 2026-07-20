@@ -391,4 +391,31 @@ while orcamento >= preco_8 and estoque_8 > 0:
        estoque_8 -= 1
 
 print(f"Compradas 16GB: {qtde_16gb} | Compradas 8GB: {qtde_8} | Sobrou: R$ {orcamento:.2f}")
+
+
+
+# %%
+# 20 O orçamento agora é infinito, mas há uma restrição de disponibilidade logística.
+# Monte um PC completo com 1 peça de CADA categoria que existe no seu DataFrame (1 CPU, 1 GPU, 1 Placa Mãe, 1 RAM, 1 Fonte, 1 Gabinete, 1 Armazenamento).
+# A regra de ouro: você só pode escolher peças que tenham estoque maior que 10 unidades, para garantir a entrega imediata. Encontre o PC que entregue o
+#  maior score total possível dadas essas condições.
+df_20 = df_estoque_hardware.copy()
+disponiveis = df_20[df_20['estoque'] > 10]
+disponiveis = disponiveis.sort_values(by='score_desempenho', ascending=False)
+
+pc = {}
+score_total = 0
+
+categorias = disponiveis['categoria'].unique()
+
+for c in categorias:
+     pecas_cat = disponiveis[disponiveis['categoria'] == c]
+     campea = pecas_cat.iloc[0]
+     pc[c] = campea['modelo']
+     score_total += campea['score_desempenho']
+
+pc
+     
+
+     
 # %%
