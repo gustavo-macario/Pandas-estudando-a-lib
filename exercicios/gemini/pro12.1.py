@@ -68,4 +68,24 @@ df_3['lucro_bruto'] = df_3['preco_venda'] - df_3['custo_fornecedor']
 linhas_alvo = (df_3['categoria'] == 'Periféricos') & (df_3['lucro_bruto'] < 150)
 df_3.loc[linhas_alvo, 'preco_venda'] = df_3.loc[linhas_alvo, 'preco_venda'] * 1.10
 df_3
+
+
+# %%
+# 4 O marketing quer saber em qual mês a loja conseguiu atrair o maior número de clientes diferentes. 
+# Determine qual mês teve a maior quantidade de clientes únicos (pessoas distintas) efetuando movimentações.
+clientes_unicos = (df_vendas.groupby(df_vendas['data_venda'].dt.month)['cliente'].nunique().sort_values(ascending=False).head(1))
+print(f'O mes que mais teve clientes foi o mes {clientes_unicos.index[0]}, com {clientes_unicos.values[0]} clientes distintos.')
+
+
+
+# %%
+# 5 Crie um DataFrame novo chamado df_compras. Ele deve conter apenas os produtos que estão com estoque menor ou igual a 10 unidades. 
+# Esse DataFrame deve ter apenas três colunas: modelo, estoque_atual, e uma nova coluna chamada sugestao_compra, que deve ser calculada
+# para trazer o estoque atual de volta exatamente para 20 unidades.
+df_compras = df_estoque.copy()
+df_compras = df_estoque[df_estoque['estoque'] <= 10]
+df_compras['sugestao_compra'] = 20 - df_compras['estoque']
+df_compras['estoque_atual'] = df_compras['estoque'] 
+df_compras = df_compras[['modelo', 'estoque_atual', 'sugestao_compra']]
+df_compras
 # %%
