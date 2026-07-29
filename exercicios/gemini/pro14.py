@@ -150,4 +150,6 @@ resumo = pd.pivot_table(
 
 )
 resumo
+
+
 # %%
