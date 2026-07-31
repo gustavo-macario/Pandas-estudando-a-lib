@@ -141,3 +141,120 @@ def count_salary_categories(accounts: pd.DataFrame) -> pd.DataFrame:
     })
     
     return resultado
+
+
+# %%
+# 1741. Find Total Time Spent by Each Employee
+import pandas as pd
+
+def total_time(employees: pd.DataFrame) -> pd.DataFrame:
+    employees['total_time'] = employees['out_time'] - employees['in_time'] 
+    df = employees.groupby(['event_day', 'emp_id'])['total_time'].sum().reset_index()
+    return df.rename(columns={'event_day': 'day'})
+
+# %%
+# 511. Game Play Analysis I
+import pandas as pd
+
+def game_analysis(activity: pd.DataFrame) -> pd.DataFrame:
+    activity = activity.sort_values(by='event_date', ascending=True)
+    activity['rank'] = activity.groupby('player_id')['event_date'].rank(method='dense', ascending=True)
+    primeiros = activity[activity['rank'] == 1]
+    primeiros = primeiros.rename(columns={'event_date': 'first_login'})
+    return primeiros[['player_id', 'first_login']]
+
+# %%
+# 2356. Number of Unique Subjects Taught by Each Teacher
+import pandas as pd
+
+def count_unique_subjects(teacher: pd.DataFrame) -> pd.DataFrame:
+    df = teacher.groupby('teacher_id')['subject_id'].nunique().reset_index()
+    return df.rename(columns={'subject_id': 'cnt'})
+
+# %%
+# 596. Classes With at Least 5 Students
+import pandas as pd
+
+def find_classes(courses: pd.DataFrame) -> pd.DataFrame:
+    df = courses.groupby('class')['student'].count().reset_index()
+    df = df[df['student'] >= 5]
+    return df[['class']]
+
+# %%
+# 586. Customer Placing the Largest Number of Orders
+import pandas as pd
+
+def largest_orders(orders: pd.DataFrame) -> pd.DataFrame:
+    df = orders.groupby('customer_number')['order_number'].count().sort_values(ascending=False).reset_index()
+    return df[['customer_number']].head(1)
+
+# %%
+# 1484. Group Sold Products By The Date
+import pandas as pd
+
+def categorize_products(activities: pd.DataFrame) -> pd.DataFrame:
+    df = activities.groupby('sell_date')['product'].agg(
+        num_sold='nunique',
+        products=lambda x: ','.join(sorted(x.unique()))
+    ).reset_index()
+    return df
+
+# %%
+# 1693. Daily Leads and Partners
+import pandas as pd
+
+def daily_leads_and_partners(daily_sales: pd.DataFrame) -> pd.DataFrame:
+    df = daily_sales.groupby(['date_id', 'make_name'])[['lead_id', 'partner_id']].nunique().reset_index()
+    return df.rename(columns={
+        'lead_id': 'unique_leads',
+        'partner_id': 'unique_partners'
+    })
+
+# %%
+# 1050. Actors and Directors Who Cooperated At Least Three Times
+import pandas as pd
+
+def actors_and_directors(actor_director: pd.DataFrame) -> pd.DataFrame:
+    df = actor_director.groupby(['actor_id', 'director_id']).count().reset_index()
+    df = df[df['timestamp'] >= 3]
+    return df[['actor_id', 'director_id']]
+
+# %%
+# 1378. Replace Employee ID With The Unique Identifier
+import pandas as pd
+
+def replace_employee_id(employees: pd.DataFrame, employee_uni: pd.DataFrame) -> pd.DataFrame:
+    df = employees.merge(right=employee_uni, how='left', on='id')
+    return df[['unique_id', 'name']]
+
+# %%
+# 1280. Students and Examinations
+import pandas as pd
+
+def students_and_examinations(students: pd.DataFrame, subjects: pd.DataFrame, examinations: pd.DataFrame) -> pd.DataFrame:
+    df = students.merge(right=subjects, how='cross')
+    examinations['attended_exams'] = 1
+    df = df.merge(right=examinations, how='left', on=['student_id', 'subject_name'])
+    df = df.groupby(['student_id', 'student_name', 'subject_name'], dropna=False)['attended_exams'].count().reset_index()
+    return df.sort_values(by=['student_id', 'subject_name'])
+
+# %%
+# 570. Managers with at Least 5 Direct Reports
+import pandas as pd
+
+def find_managers(employee: pd.DataFrame) -> pd.DataFrame:
+    df = employee.merge(right=employee, how='left', left_on='id', right_on='managerId')
+    df = df.groupby(['id_x', 'name_x'], dropna=False)['managerId_y'].count().reset_index()
+    df = df[df['managerId_y'] >= 5]
+    df = df.rename(columns={'name_x': 'name'})
+    return df[['name']]
+
+# %%
+# 607. Sales Person
+import pandas as pd
+
+def sales_person(sales_person: pd.DataFrame, company: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    red_company = company[company['name'] == 'RED']  
+    red_orders = orders.merge(red_company, on='com_id')
+    red_sales_ids = red_orders['sales_id'].unique()   
+    return sales_person[~sales_person['sales_id'].isin(red_sales_ids)][['name']]
